@@ -1,0 +1,41 @@
+{
+  "name": "chuyen-de-thuc-tap",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon index.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "@fastify/cookie": "^11.0.2",
+    "@fastify/cors": "^11.0.0",
+    "@fastify/express": "^4.0.2",
+    "@fastify/jwt": "^9.1.0",
+    "@fastify/oauth2": "^8.1.2",
+    "@fastify/rate-limit": "^10.2.2",
+    "@fastify/sensible": "^6.0.3",
+    "@fastify/session": "^11.1.0",
+    "@fastify/websocket": "^11.0.2",
+    "axios": "^1.8.4",
+    "bcryptjs": "^3.0.2",
+    "chuyen-de-thuc-tap": "file:",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "fastify": "^5.2.1",
+    "fastify-jwt": "^4.2.0",
+    "fastify-socket.io": "^5.1.0",
+    "fastify-user-agent": "^2.0.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.12.1",
+    "mongoose-paginate-v2": "^1.9.0",
+    "nodemailer": "^6.10.0",
+    "socket.io": "^4.8.1",
+    "ua-parser-js": "^2.0.3",
+    "uuid": "^11.1.0"
+  }
+}
