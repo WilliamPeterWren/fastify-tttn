@@ -1,33 +1,18 @@
-const reviewService = require("./reviewService");
+const reviewService = require('./review.service');
 
-exports.createReview = async (req, res) => {
+exports.createReview = (fastify) => async (request, reply) => {
     try {
-        const review = await reviewService.createReview({
-            user: req.user.id,
-            product: req.body.product,
-            rating: req.body.rating,
-            comment: req.body.comment,
-        });
-        res.status(201).json(review);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-};
-
-exports.getReviewsByProduct = async (req, res) => {
-    try {
-        const reviews = await reviewService.getReviewsByProduct(req.params.productId);
-        res.status(200).json(reviews);
-    } catch (err) {
-        res.status(400).json({ error: err.message });
-    }
-};
-
-exports.deleteReview = async (req, res) => {
-    try {
-        await reviewService.deleteReview(req.params.reviewId, req.user.id);
-        res.status(200).json({ message: "Review deleted successfully" });
-    } catch (err) {
-        res.status(400).json({ error: err.message });
+        const userId = request.user.userId; 
+        const data = request.body;
+        const result = await reviewService.createReview(userId, data);
+        reply.code(201).send(result);
+    } catch (error) {
+        if (error.message.includes('Invalid') || error.message.includes('must be')) {
+            return reply.code(400).send({ message: error.message });
+        }
+        if (error.message === 'Product not found') {
+            return reply.code(404).send({ message: error.message });
+        }
+        return reply.code(500).send({ message: 'Internal Server Error', error: error.message });
     }
 };

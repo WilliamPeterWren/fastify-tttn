@@ -184,6 +184,8 @@ fastify.register(require('./src/category/category.routes'), { prefix: '/category
 fastify.register(require('./src/cart/cart.routes'), { prefix: '/cart' });
 fastify.register(require('./src/order/order.routes'), { prefix: '/order' });
 
+fastify.register(require('./src/review/review.routes'), { prefix: '/review' });
+
 // Start server
 const start = async () => {
   await connectDB();

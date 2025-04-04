@@ -28,6 +28,20 @@ const getOne = {
               },
               nullable: true 
             },
+            reviews:{
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  _id: { type: "string" },
+                  rating: { type: "number", minimum: 1, maximum: 5 },
+                  comment: { type: "string" },
+                  user: { type: "object", properties: { email: {type: 'string'} } },
+                  created_at: { type: "string", format: "date-time" }
+                },
+                required: ["rating", "comment", "user", "created_at"]
+              }
+            },
             product_images: {
               type: "array",
               items: { 

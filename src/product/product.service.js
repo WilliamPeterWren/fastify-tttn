@@ -8,6 +8,7 @@ const Design = require('../models/Design');
 const Memory = require('../models/Memory');
 const Screen = require('../models/Screen');
 const Utility = require('../models/Utility');
+const Review = require('../models/Review');
 
 const {createSlug, generateSKU} = require('../utils/user.utils');
 
@@ -114,13 +115,22 @@ exports.getProductBySlug = async (slug, fastify) => {
     .populate('design')
     .populate('memory')
     .populate('screen')
-    .populate('utility')        
+    .populate('utility')
     .select('-__v -created_at')    
     .lean();
+
+  const reviews = await Review.find({product: product._id})
+   .populate('user', 'email')
+    .select('-product -__v')
+    .lean();
+
+  product.reviews = reviews;
+
   
   if (!product) {
     throw fastify.httpErrors.notFound('Product not found');
   }
+
 
   return product;
 };

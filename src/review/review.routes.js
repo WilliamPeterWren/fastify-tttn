@@ -1,9 +1,14 @@
-const express = require("express");
-const router = express.Router();
-const { createReview, getReviewsByProduct, deleteReview } = require("./reviewController");
+const reviewController = require('./review.controller');
 
-router.post("/review", { preHandler: [fastify.authenticate] }, createReview);
-router.get("/review/:productId", getReviewsByProduct);
-router.delete("/review/:reviewId", { preHandler: [fastify.authenticate] }, deleteReview);
+const schema = require('./schema/index')
 
-module.exports = router;
+async function reviewRoutes(fastify, options) {
+
+  fastify.post('/create', { 
+    preHandler: [fastify.authenticate],  
+    schema: schema.createReview
+  }, reviewController.createReview(fastify));
+
+}
+
+module.exports = reviewRoutes;

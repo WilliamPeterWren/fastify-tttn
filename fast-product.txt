@@ -6,4 +6,3 @@ product one-to-many variant
 -------------
 not done:
   hot sale
-  review
