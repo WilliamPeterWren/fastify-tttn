@@ -1,61 +1,84 @@
 const addressService = require('./address.service');
 
-const getAll = async (req, res) => {
+// Get all addresses
+const getAll = (fastify) => async (request, reply) => {
     try {
         const items = await addressService.getAll();
-        res.send(items);
+        reply.send(items);
     } catch (error) {
-        res.code(500).send({ message: error.message });
+        reply.code(500).send({ message: 'Internal Server Error', error: error.message });
     }
 };
 
-const getByUserId = (fastify) => async (req, res) => {
+// Get addresses by user ID
+const getByUserId = (fastify) => async (request, reply) => {
     try {
-        const item = await addressService.getByUserId(req.params.userId, fastify);
-        if (!item) return res.code(404).send({ message: 'User Id not found' });
-        res.send(item);
+        const { userId } = request.params; 
+        const addresses = await addressService.getByUserId(userId);
+        reply.send(addresses);
     } catch (error) {
-        res.code(500).send({ message: error.message });
+        if (error.message === 'User not found or deactivated') {
+            return reply.code(404).send({ message: error.message });
+        }
+        reply.code(500).send({ message: 'Internal Server Error', error: error.message });
     }
 };
 
-const getByAddressId = (fastify) => async (req, res) => {
+// Get address by address ID
+const getByAddressId = (fastify) => async (request, reply) => {
     try {
-        const item = await addressService.getByAddressId(req.params.userId, fastify);
-        if (!item) return res.code(404).send({ message: 'Address id not found' });
-        res.send(item);
+        const { addressId } = request.params;  
+        const address = await addressService.getByAddressId(addressId);
+        reply.send(address);
     } catch (error) {
-        res.code(500).send({ message: error.message });
+        if (error.message === 'Address not found') {
+            return reply.code(404).send({ message: error.message });
+        }
+        reply.code(500).send({ message: 'Internal Server Error', error: error.message });
     }
 };
 
-
-const create = (fastify) => async (req, res) => {
+// Create a new address
+const create = (fastify) => async (request, reply) => {
     try {
-        const newItem = await addressService.create(req.body, fastify);
-        res.send(newItem);
+        const newItem = await addressService.create(request.body);
+        reply.code(201).send(newItem);
     } catch (error) {
-        res.code(400).send({ message: error.message });
+        if (error.message === 'User not found or deactivated') {
+            return reply.code(404).send({ message: error.message });
+        }
+        if (error.message === 'User can have maximum 3 addresses') {
+            return reply.code(400).send({ message: error.message });
+        }
+        reply.code(500).send({ message: 'Internal Server Error', error: error.message });
     }
 };
 
-const update = (fastify) => async (req, res) => {
+// Update an address
+const update = (fastify) => async (request, reply) => {
     try {
-        const updatedItem = await addressService.update(req.params.id, req.body, fastify);
-        if (!updatedItem) return res.code(404).send({ message: 'Address not found' });
-        res.send(updatedItem);
+        const { id } = request.params;
+        const updatedItem = await addressService.update(id, request.body);
+        reply.send(updatedItem);
     } catch (error) {
-        res.code(400).send({ message: error.message });
+        if (error.message === 'Address not found') {
+            return reply.code(404).send({ message: error.message });
+        }
+        reply.code(500).send({ message: 'Internal Server Error', error: error.message });
     }
 };
 
-const remove = (fastify) => async (req, res) => {
+// Delete an address
+const remove = (fastify) => async (request, reply) => {
     try {
-        const deletedItem = await addressService.remove(req.params.id, fastify);
-        if (!deletedItem) return res.code(404).send({ message: 'Address not found' });
-        res.send({ message: 'Address deleted' });
+        const { id } = request.params;
+        const result = await addressService.remove(id);
+        reply.send(result);
     } catch (error) {
-        res.code(500).send({ message: error.message });
+        if (error.message === 'Address not found') {
+            return reply.code(404).send({ message: error.message });
+        }
+        reply.code(500).send({ message: 'Internal Server Error', error: error.message });
     }
 };
 

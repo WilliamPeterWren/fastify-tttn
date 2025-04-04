@@ -1,59 +1,90 @@
-const orderService = require('./orderService');
+const orderService = require('./order.service');
 
-exports.createOrder = async (request, reply) => {
+exports.purchase = (fastify) => async (req, res) => {
     try {
-        const userId = request.user.id; 
-        const order = await orderService.createOrder(userId, request.body);
-        reply.send({ message: 'Order placed successfully', order });
-    } catch (err) {
-        reply.status(500).send({ error: err.message });
-    }
-};
+        const { payment_type, order_items, total_voucher, shipping_address } = req.body;
 
-exports.getOrderById = async (request, reply) => {
-    try {
-        const { id } = request.params;
-        const order = await orderService.getOrderById(id);
-        reply.send(order);
-    } catch (err) {
-        reply.status(404).send({ error: err.message });
-    }
-};
-
-exports.getAllOrders = async (request, reply) => {
-    try {
-        const { page = 1, limit = 10 } = request.query;
-        const orders = await orderService.getAllOrders(page, limit);
-        reply.send(orders);
-    } catch (err) {
-        reply.status(500).send({ error: err.message });
-    }
-};
-
-exports.updateOrderStatus = async (request, reply) => {
-    try {
-        const { id } = request.params;
-        const { status } = request.body;
-
-        if (!['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'].includes(status)) {
-            return reply.status(400).send({ message: 'Invalid order status' });
+        if (!order_items || !shipping_address) {
+            throw fastify.httpErrors.badRequest('order items and shipping address is required ...');
         }
 
-        const updatedOrder = await orderService.updateOrderStatus(id, status);
-        reply.send({ message: 'Order status updated', updatedOrder });
-    } catch (err) {
-        reply.status(500).send({ error: err.message });
+        const user = req.user.userId;
+
+        const order = await orderService.purchase(user, req.body);
+
+        res.code(201).send({
+            order,
+            message: 'Order created successfully', 
+            code: 201
+        });
+    } catch (error) {       
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
-exports.deleteOrder = async (request, reply) => {
-    try {
-        const { id } = request.params;
-        const deletedOrder = await orderService.deleteOrder(id);
-        if (!deletedOrder) return reply.status(404).send({ message: 'Order not found' });
 
-        reply.send({ message: 'Order deleted successfully' });
-    } catch (err) {
-        reply.status(500).send({ error: err.message });
+
+exports.getAllOrders = (fastify) => async (request, reply) => {
+    try {
+        const userId = request.user.id || request.user.userId;
+        const { page, limit } = request.query;
+        const {orders, pagination} = await orderService.getAllOrders(userId, parseInt(page), parseInt(limit));
+        reply.code(200).send({orders, pagination, message: 'get all orders', code: 200});
+    } catch (error) {
+        if (error.message.includes('Invalid') || error.message.includes('must be')) {
+            return reply.code(400).send({ message: error.message });
+        }
+        if (error.message === 'Order not found for this user') {
+            return reply.code(404).send({ message: error.message });
+        }
+        return reply.code(500).send({ message: 'Internal Server Error', error: error.message });
+    }
+};
+
+
+
+exports.getOne = (fastify) => async (request, reply) => {
+    try {
+        const { orderId } = request.params;
+        if (!orderId || typeof orderId !== 'string') {
+            throw fastify.httpErrors.badRequest('Invalid order slug');
+        }
+
+        const order = await orderService.getOne(orderId);
+
+        reply.code(200).send({
+            order,
+            message: 'Order retrieved successfully',
+            code: 200
+        });
+    } catch (error) {
+        if (error.message === 'Order not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        }
+        fastify.log.error('Error fetching order by slug:', error);
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
+    }
+};
+
+
+exports.update = (fastify) => async (request, reply) => {
+    try {
+        const { orderId } = request.params;
+        const data = request.body;
+
+        // if (!request.user.isStaff) {
+        //     return reply.code(403).send({ message: 'Forbidden: Staff access required' });
+        // }
+
+        const result = await orderService.update(orderId, data);
+        reply.send(result);
+    } catch (error) {
+        if (error.message.includes('Invalid')) {
+            return reply.code(400).send({ message: error.message });
+        }
+        if (error.message === 'Order not found') {
+            return reply.code(404).send({ message: error.message });
+        }
+        return reply.code(500).send({ message: 'Internal Server Error', error: error.message });
     }
 };

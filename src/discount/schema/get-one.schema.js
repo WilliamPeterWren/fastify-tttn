@@ -19,10 +19,13 @@ const getOne = {
           type: 'object',
           properties: {
             _id: { type: 'string',},
-            value: { type: 'string' },
+            value: { type: 'number' },
             isGlobal: { type: 'boolean' },
             name: { type: 'string' },
-            expires_at: {type: 'date'},
+            expires_at: { 
+              type: 'string', 
+              format: 'date-time' 
+            },
             slug: { type: 'string' },
           }
         },

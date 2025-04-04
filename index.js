@@ -168,20 +168,21 @@ fastify.register(require('./src/admin/admin.routes'), { prefix: '/admin'});
 fastify.register(require('./src/staff/staff.routes'), { prefix: '/staff' });
 
 fastify.register(require('./src/auth/auth.routes'), { prefix: '/auth' });
+fastify.register(require('./src/token/token.routes'),  { prefix: '/token'});
 
 fastify.register(require('./src/google/google.routes'));
 fastify.register(require('./src/user/user.routes'), { prefix: '/user' });
+fastify.register(require('./src/address/address.routes'), { prefix: '/address'});
 
 fastify.register(require('./src/chat/chat.routes'), { prefix: '/chat' });
 
-fastify.register(require('./src/address/address.routes'), { prefix: '/address'});
-
 fastify.register(require('./src/brand/brand.routes'), { prefix: '/brand' });
-// fastify.register(require('./src/discount/discount.routes'), { prefix: '/discount' });
+fastify.register(require('./src/discount/discount.routes'), { prefix: '/discount' });
 
 fastify.register(require('./src/product/product.routes'), { prefix: '/product' });
 fastify.register(require('./src/category/category.routes'), { prefix: '/category' });
-fastify.register(require('./src/token/token.routes'),  { prefix: '/token'});
+fastify.register(require('./src/cart/cart.routes'), { prefix: '/cart' });
+fastify.register(require('./src/order/order.routes'), { prefix: '/order' });
 
 // Start server
 const start = async () => {

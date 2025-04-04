@@ -93,7 +93,7 @@ exports.getAllProducts = async (page = 1, limit = 10) => {
   const products = await Product.find({ _id: { $in: productIds } })
     .populate('brand', 'brand_name')
     .populate('category', 'category_name')
-    .populate('variants', 'color storage price')
+    .populate('variants', '_id color storage price')
     .select('-__v -created_at -reviews -battery -camera -configuration -connection -design -memory -screen -utility')
     .skip((page - 1) * limit)
     .limit(limit)

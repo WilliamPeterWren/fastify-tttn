@@ -14,10 +14,13 @@ const update = {
   body: { 
     type: 'object', 
     properties: { 
-      value: { type: 'string', mininum: 0 }, 
+      value: { type: 'number', minimum: 0 }, 
       isGlobal: { type: 'boolean' }, 
       name: { type: 'string' },
-      expires_at: { type: 'date' },
+      expires_at: { 
+        type: 'string', 
+        format: 'date-time' 
+      },
     }
   },
   response: {
@@ -28,10 +31,13 @@ const update = {
           type: 'object',
           properties: {
             _id: { type: 'string',},
-            value: { type: 'string' },
+            value: { type: 'number' },
             isGlobal: { type: 'boolean' },
             name: { type: 'string' },
-            expires_at: {type: 'date'},
+            expires_at: { 
+              type: 'string', 
+              format: 'date-time' 
+            },
             slug: { type: 'string' },
           }
         },

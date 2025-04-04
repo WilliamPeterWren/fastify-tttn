@@ -2,3 +2,8 @@ product many-to-one category
 brand one-to-many product
 product one-to-many review
 product one-to-many variant
+
+-------------
+not done:
+  hot sale
+  review

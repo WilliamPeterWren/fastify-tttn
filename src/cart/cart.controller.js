@@ -1,50 +1,115 @@
-const Cart = require('./Cart');
+const cartService = require('./cart.service');
 
-exports.getAll = async (req, res) => {
+exports.addToCart = (fastify) => async (req, res) => {
     try {
-        const items = await Cart.find();
-        res.json(items);
+        const { product, quantity } = req.body;
+        const userId = req.user.userId;
+
+        if (!product || !quantity) {
+            throw fastify.httpErrors.badRequest('product and quantity is required');
+        }
+
+        const cart = await cartService.addToCart(userId, product, quantity);
+        res.code(201).send({
+            cart,
+            message: 'add to cart successfully', 
+            code: 201
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        if (error.message === 'Cart with this name already exists') {
+            throw fastify.httpErrors.conflict(error.message);
+        }
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
-exports.getOne = async (req, res) => {
+exports.getAllCarts = (fastify) => async (req, res) => {
     try {
-        const item = await Cart.findById(req.params.id);
-        if (!item) return res.status(404).json({ message: 'Cart not found' });
-        res.json(item);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const userId = req.user.userId;
+
+        const {cart, pagination} = await cartService.getAllCarts(userId, page, limit);
+
+        const response = {
+            cart,
+            pagination,
+            message: 'Carts retrieved successfully',
+            code: 200
+        };
+
+        res.code(200).send(response);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
-exports.create = async (req, res) => {
+exports.getByCartSlug = (fastify) => async (request, reply) => {
     try {
-        const newItem = new Cart(req.body);
-        await newItem.save();
-        res.status(201).json(newItem);
+        const { cartSlug } = request.params;
+        if (!cartSlug || typeof cartSlug !== 'string') {
+            throw fastify.httpErrors.badRequest('Invalid cart slug');
+        }
+
+        const cart = await cartService.getByCartSlug(cartSlug);
+
+        reply.code(200).send({
+            cart,
+            message: 'Cart retrieved successfully',
+            code: 200
+        });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        if (error.message === 'Cart not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        }
+        fastify.log.error('Error fetching cart by slug:', error);
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
-exports.update = async (req, res) => {
+
+exports.update = (fastify) => async (req, res) => {
     try {
-        const updatedItem = await Cart.findByIdAndUpdate(req.params.id, req.body, { new: true });
-        if (!updatedItem) return res.status(404).json({ message: 'Cart not found' });
-        res.json(updatedItem);
+        const { cartId } = req.params;   
+        const { product, quantity } = req.body;
+        if (!product ||!quantity) {
+            throw fastify.httpErrors.badRequest('product and quantity is required');
+        }    
+
+        const cart = await cartService.update(cartId, req.body);
+        res.code(200).send({
+            cart,
+            message: 'Cart updated successfully',
+            code: 200
+        });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        if (error.message === 'Cart not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        }
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
-exports.remove = async (req, res) => {
+exports.remove = (fastify) => async (req, res) => {
     try {
-        const deletedItem = await Cart.findByIdAndDelete(req.params.id);
-        if (!deletedItem) return res.status(404).json({ message: 'Cart not found' });
-        res.json({ message: 'Cart deleted' });
+        const { cartId } = req.params;
+        if (!cartId || typeof cartId !== 'string') {
+            throw fastify.httpErrors.badRequest('Invalid variantId ...');
+        }
+
+        const {product} = req.body;
+
+        const cart = await cartService.remove(cartId, product);
+        res.code(200).send({
+            cart,
+            message: 'Cart deleted successfully', 
+            code: 200
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        if (error.message === 'Cart not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        }
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };

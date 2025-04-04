@@ -1,72 +1,99 @@
-const Order = require('./Order');
-const Product = require('../product/Product');
+const mongoose = require('mongoose');
 
-exports.createOrder = async (userId, orderData) => {
-    if (!orderData.order_items || orderData.order_items.length === 0) {
-        throw new Error('Order must contain at least one item.');
-    }
+const Order = require('../models/Order');
+const { createSlug } = require('../utils/user.utils');
 
-    const processedItems = [];
-    let totalAmount = 0;
+exports.purchase = async (user, data) => {
+  const { payment_type, order_items, total_voucher, shipping_address } = data;
 
-    for (const item of orderData.order_items) {
-        const product = await Product.findById(item.product);
-        if (!product) throw new Error(`Product ${item.product} not found.`);
-        if (product.stock < item.quantity) throw new Error(`Not enough stock for ${product.product_name}.`);
+  const order = new Order({user, ...data});
+  await order.save();
 
-        const priceAtPurchase = product.latest_price ? product.latest_price.price : 0;
-        totalAmount += priceAtPurchase * item.quantity;
-
-        processedItems.push({
-            product: product._id,
-            type: item.type,
-            price_at_purchase: priceAtPurchase,
-            quantity: item.quantity,
-            discount_at_purchase: item.discount || null
-        });
-
-        product.stock -= item.quantity;
-        await product.save();
-    }
-
-    const order = new Order({
-        user: userId,
-        payment: orderData.payment,
-        order_items: processedItems,
-        total_voucher: orderData.total_voucher || 0,
-        total_amount: totalAmount - (orderData.total_voucher || 0),
-        status: 'Pending',
-        estimated_delivery: orderData.estimated_delivery || null,
-        shipping_address: orderData.shipping_address
-    });
-
-    return await order.save();
+  return await order.save();
 };
 
-exports.getOrderById = async (orderId) => {
-    const order = await Order.findById(orderId).populate('user payment order_items.product order_items.type');
-    if (!order) throw new Error('Order not found.');
+
+exports.getAllOrders = async (userId, page = 1, limit = 10) => {
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+        throw new Error('Invalid userId');
+    }
+    if (!Number.isInteger(page) || page < 1) {
+        throw new Error('Page must be a positive integer');
+    }
+    if (!Number.isInteger(limit) || limit < 1) {
+        throw new Error('Limit must be a positive integer');
+    }
+
+    const skip = (page - 1) * limit;
+    const orders = await Order.find({ user: userId })
+        .populate('shipping_address', 'street ward city province phone_number') 
+        .sort({ created_at: -1 }) 
+        .skip(skip)
+        .limit(limit)
+        .select('-__v')
+        .lean();
+
+    if (!orders.length && page > 1) {
+        throw new Error('Page out of range');
+    }
+
+    const totalItems = await Order.countDocuments({ user: userId });
+    const totalPages = Math.ceil(totalItems / limit);
+
+    console.log(orders)
+
+    return {
+        orders, 
+        pagination: {
+            page,
+            limit,
+            totalItems,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrevious: page > 1
+        }
+    };
+};
+
+exports.getOne = async (orderId) => {
+    const order = await Order.findById(orderId)
+        .populate('shipping_address', 'street ward city province phone_number')
+        .select('-__v -created_at')
+        .lean();
+
+    if (!order) {
+        throw new Error('Order not found');
+    }
+
     return order;
 };
 
-exports.getAllOrders = async (page = 1, limit = 10) => {
-    const orders = await Order.find()
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .populate('user payment order_items.product order_items.type');
 
-    const totalOrders = await Order.countDocuments();
-    return { orders, total: totalOrders, page, limit };
-};
+  exports.update = async (orderId, data) => {
+    if (!mongoose.Types.ObjectId.isValid(orderId)) {
+        throw new Error('Invalid orderId');
+    }
 
-exports.updateOrderStatus = async (orderId, status) => {
-    const order = await Order.findById(orderId);
-    if (!order) throw new Error('Order not found.');
+    const { status } = data;
+   
+    const validStatuses = ['Pending', 'Processing', 'Shipped', 'Delivered', 'Cancelled'];
+    if (status && !validStatuses.includes(status)) {
+        throw new Error('Invalid status');
+    }   
 
-    order.status = status;
-    return await order.save();
-};
+    const order = await Order.findById(orderId)
+        .populate('shipping_address', 'street ward city province phone_number');
+    if (!order) {
+        throw new Error('Order not found');
+    }
 
-exports.deleteOrder = async (orderId) => {
-    return await Order.findByIdAndDelete(orderId);
+    if (status) order.status = status;
+  
+    await order.save();
+
+    return {
+        order: order.toObject(), 
+        message: 'Order updated successfully',
+        code: 200
+    };
 };

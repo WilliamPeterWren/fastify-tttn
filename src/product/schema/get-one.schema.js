@@ -46,6 +46,7 @@ const getOne = {
               items: {
                 type: "object",
                 properties: {
+                  _id: { type: "string"},
                   color: { type: "string" },
                   price: { type: "number" },
                   storage: { type: "number" },

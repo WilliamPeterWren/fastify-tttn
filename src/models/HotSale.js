@@ -3,40 +3,17 @@ const mongoose = require('mongoose');
 const { createSlug } = require('../utils/user.utils');
 
 const hotSaleSchema = new mongoose.Schema({
-    name: { 
-        type: String, 
-        required: true, 
-        trim: true 
-    },
-    slug: { 
-        type: String, 
-        unique: true, 
-        required: true, 
-        index: true 
-    },
+    name: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, index: true },
     discount: { 
-        value: { type: Number, required: true, min: 0, max: 100 }, 
+        value: {type: Number, required: true, min: 0, max: 100 }, 
         type: { type: String, enum: ['percentage', 'fixed'], default: 'percentage' } 
     },
-    is_valid: { 
-        type: Boolean, 
-        default: true 
-    },
-    products: [{ 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Product' 
-    }],
-    categories: [{ 
-        type: mongoose.Schema.Types.ObjectId, 
-        ref: 'Category' 
-    }],
-    start_date: { 
-        type: Date, 
-        required: true 
-    },
-    end_date: { 
-        type: Date, 
-        required: true, 
+    is_valid: { type: Boolean, default: true},
+    products: [{  type: mongoose.Schema.Types.ObjectId, ref: 'Product'}],
+    categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
+    start_date: { type: Date, required: true },
+    end_date: { type: Date,  required: true, 
         validate: {
             validator: function(value) {
                 return this.start_date < value;
@@ -44,17 +21,9 @@ const hotSaleSchema = new mongoose.Schema({
             message: 'end_date must be after start_date'
         }
     },
-    description: { 
-        type: String 
-    },
-    created_at: { 
-        type: Date, 
-        default: Date.now 
-    },
-    updated_at: { 
-        type: Date, 
-        default: Date.now 
-    }
+    description: { type: String },
+    created_at: { type: Date, default: Date.now },
+    updated_at: { type: Date, default: Date.now }
 });
 
 hotSaleSchema.pre('save', function(next) {

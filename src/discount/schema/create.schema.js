@@ -1,3 +1,4 @@
+
 const standardResponses = require('../../schemas/standard.response');
 
 const create = {
@@ -7,10 +8,13 @@ const create = {
   body: { 
     type: 'object', 
     properties: { 
-      value: { type: 'string', mininum: 0 }, 
+      value: { type: 'number', minimum: 0 }, 
       isGlobal: { type: 'boolean' }, 
       name: { type: 'string' },
-      expires_at: { type: 'date' },
+      expires_at: { 
+        type: 'string', 
+        format: 'date-time' 
+      },
     }, 
     required: ['value', 'isGlobal', 'expires_at']
   },
@@ -21,10 +25,13 @@ const create = {
         discount: {
           type: 'object',
           properties: {
-            value: { type: 'string', mininum: 0 }, 
+            value: { type: 'number', minimum: 0 }, 
             isGlobal: { type: 'boolean' }, 
             name: { type: 'string' },
-            expires_at: { type: 'date' },
+            expires_at: { 
+              type: 'string', 
+              format: 'date-time' 
+            },
             slug: { type: 'string' },
           },
         },

@@ -1,11 +1,27 @@
-const express = require('express');
-const router = express.Router();
-const { getAll, getOne, create, update, remove } = require('./controllers/CartController');
+const cartController = require('./cart.controller');
+const schema = require('./schema/index')
 
-router.get('/api/cart', getAll);
-router.get('/api/cart/:id', getOne);
-router.post('/api/cart', create);
-router.put('/api/cart/:id', update);
-router.delete('/api/cart/:id', remove);
+async function cartRoutes(fastify, options){
+  fastify.post('/add-to-cart', {
+    preHandler: [fastify.authenticate],  
+    schema: schema.addToCart
+  }, cartController.addToCart(fastify));
 
-module.exports = router;
+  fastify.delete('/delete/:cartId', {
+    preHandler: [fastify.authenticate],  
+    schema: schema.remove
+  }, cartController.remove(fastify));
+
+  fastify.put('/update/:cartId', {
+    preHandler: [fastify.authenticate],  
+    schema: schema.update
+  }, cartController.update(fastify));
+
+  fastify.get('/get-cart', {
+    preHandler: [fastify.authenticate],  
+    schema: schema.getAll
+  }, cartController.getAllCarts(fastify));
+
+}
+
+module.exports = cartRoutes;
