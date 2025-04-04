@@ -177,7 +177,7 @@ fastify.register(require('./src/chat/chat.routes'), { prefix: '/chat' });
 fastify.register(require('./src/address/address.routes'), { prefix: '/address'});
 
 fastify.register(require('./src/brand/brand.routes'), { prefix: '/brand' });
-fastify.register(require('./src/discount/discount.routes'), { prefix: '/discount' });
+// fastify.register(require('./src/discount/discount.routes'), { prefix: '/discount' });
 
 fastify.register(require('./src/product/product.routes'), { prefix: '/product' });
 fastify.register(require('./src/category/category.routes'), { prefix: '/category' });
