@@ -1,26 +1,29 @@
 const standardResponses = require('../../schemas/standard.response');
 
 const getOne = { 
-  description: 'Get one brand endpoint',
-  tags: ['Brand'],
-  operationId: 'getOneBrand',
+  description: 'Get one discount endpoint',
+  tags: ['Discount'],
+  operationId: 'getOneDiscount',
   params: {
     type: 'object',
     properties: {
-      brandSlug: { type: 'string' }  
+      slug: { type: 'string' }  
     },
-    required: ['brandSlug']
+    required: ['slug']
   },
   response: {
     200: {
       type: 'object',
       properties: {
-        brand: { 
+        discount: { 
           type: 'object',
           properties: {
-            _id: { type: 'string' },
-            brand_name: { type: 'string' },
-            brand_image: { type: 'string', nullable: true }
+            _id: { type: 'string',},
+            value: { type: 'string' },
+            isGlobal: { type: 'boolean' },
+            name: { type: 'string' },
+            expires_at: {type: 'date'},
+            slug: { type: 'string' },
           }
         },
         message: { type: 'string' },

@@ -8,25 +8,26 @@ async function categoryRoutes(fastify, options) {
     fastify.post('/create', { 
         preHandler: [fastify.authenticate, staffMiddleware.isStaff],  
         schema: schema.create
-    }, categoryController.createCategory);
+    }, categoryController.createCategory(fastify));
 
-    fastify.put('/update/:id', { 
+    fastify.put('/update/:slug', { 
         preHandler: [fastify.authenticate, staffMiddleware.isStaff],  
         schema: schema.update
-    }, categoryController.updateCategory);
+    }, categoryController.updateCategory(fastify));
 
-    fastify.delete('/delete/:id', { 
+    fastify.delete('/delete/:slug', { 
         preHandler: [fastify.authenticate, adminMiddleware.isAdmin],  
-    }, categoryController.deleteCategory);
+        schema: schema.remove
+    }, categoryController.deleteCategory(fastify));
 
     fastify.get('/get-all', { 
         schema: schema.getAll
     }, categoryController.getAllCategories)
 
 
-    fastify.get('/:id',{
+    fastify.get('/:slug',{
         schema: schema.getOne
-    }, categoryController.getCategoryById);  
+    }, categoryController.getCategoryBySlug(fastify));  
 }
 
 module.exports = categoryRoutes;

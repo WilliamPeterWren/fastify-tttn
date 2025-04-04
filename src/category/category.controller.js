@@ -1,27 +1,50 @@
 const categoryService = require('./category.service');
 
-exports.createCategory = async (request, reply) => {
+exports.createCategory = (fastify) => async (request, reply) => {
     try {
-        const { category_name } = request.body;
+        const { category_name, parent } = request.body;
+
         if (!category_name) {
-            return reply.code(400).send({ message: 'Category name is required' });  
+            throw fastify.httpErrors.badRequest('Category name is required');
         }
 
-        const category = await categoryService.createCategory(category_name);
-        reply.send({ message: 'Category created successfully', category });
-    } catch (err) {
-        reply.code(500).send({ error: err.message });
+        const category = await categoryService.createCategory(category_name, parent);
+        reply.code(201).send({
+            message: 'Category created successfully',
+            category,
+            code: 201
+        });
+    } catch (error) {
+        if (fastify.httpErrors?.isHttpError(error)) {
+            reply.code(error.statusCode).send({
+                message: error.message,
+                code: error.statusCode
+            });
+        } else if (error.message === 'Category already exists') {
+            throw fastify.httpErrors.conflict(error.message);
+        } else {
+            reply.code(500).send({
+                message: error.message || 'Internal server error',
+                code: 500
+            });
+        }
     }
 };
 
 exports.getAllCategories = async (request, reply) => {
     try {
         const { page = 1, limit = 10 } = request.query;
-
         const categories = await categoryService.getAllCategories(page, limit);
-        console.log(categories);
+        const response = {
+            categories,
+            total: categories?.length,
+            page,
+            limit,
+            message: 'Categories retrieved successfully',
+            code: 200 
+        };
 
-        reply.code(200).send(categories);
+        reply.send(response);
     } catch (err) {
         console.log(err.message);
         reply.code(500).send({ error: err.message });
@@ -29,52 +52,91 @@ exports.getAllCategories = async (request, reply) => {
 };
 
 
-exports.updateCategory = async (request, reply) => {
+exports.updateCategory = (fastify) => async (request, reply) => {
     try {
-        const { id } = request.params;
+        const { slug } = request.params;
         const { category_name, parent } = request.body;
 
-        if(!category_name) {
-            return reply.code(400).send({ message: 'Category name is required' });  
+        if (!slug) {
+            throw fastify.httpErrors.badRequest('Slug is required');
+        }
+        if (!category_name) {
+            throw fastify.httpErrors.badRequest('Category name is required');
         }
 
-        const category = await categoryService.updateCategory(id, category_name, parent);
+        const category = await categoryService.updateCategory(slug, category_name, parent);
 
-        if (!category) {
-            return reply.code(404).send({ message: 'Category not found' });
+        reply.code(200).send({
+            category,
+            message: 'Category updated successfully',
+            code: 200
+        });
+    } catch (error) {
+        if (fastify.httpErrors?.isHttpError(error)) {
+            reply.code(error.statusCode).send({
+                message: error.message,
+                code: error.statusCode
+            });
+        } else if (error.message === 'Category not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        } else if (error.message === 'Invalid category slug') {
+            throw fastify.httpErrors.badRequest(error.message);
+        } else {
+            throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
         }
-        console.log(category);
-
-        reply.send(category);
-    } catch (err) {
-        reply.code(500).send({ error: err.message });
     }
 };
 
-exports.deleteCategory = async (request, reply) => {
-    try {
-        const { id } = request.params;
-        const deletedCategory = await categoryService.deleteCategory(id);
 
-        if (!deletedCategory) {
-            return reply.code(404).send({ message: 'Category not found' });
+exports.deleteCategory = (fastify) => async (request, reply) => {
+    try {
+        const { slug } = request.params;
+
+        if (!slug) {
+            throw fastify.httpErrors.badRequest('Slug is required');
         }
 
-        reply.send({ message: 'Category deleted successfully' });
-    } catch (err) {
-        reply.code(500).send({ error: err.message });
+        const deletedCategory = await categoryService.deleteCategory(slug);
+
+        reply.code(200).send({
+            message: 'Category deleted successfully',
+            category: deletedCategory,
+            code: 200
+        });
+    } catch (error) {
+        if (fastify.httpErrors?.isHttpError(error)) {
+            reply.code(error.statusCode).send({
+                message: error.message,
+                code: error.statusCode
+            });
+        } else if (error.message === 'Category not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        } else if (error.message === 'Invalid category slug') {
+            throw fastify.httpErrors.badRequest(error.message);
+        } else {
+            throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
+        }
     }
 };
 
-exports.getCategoryById = async (request, reply) => {
+exports.getCategoryBySlug = (fastify) => async (request, reply) => {
     try {
-        const { id } = request.params;
-        const category = await categoryService.getCategoryById(id);
-
-        if (!category) {
-            return reply.code(404).send({ message: 'Category not found' });  
+        const { slug } = request.params;
+        if(!slug){
+            return reply.code(400).send({ message: 'Slug is required' });
         }
-        await reply.send(category);
+        console.log(slug);
+
+        const c = await categoryService.getCategoryBySlug(slug, fastify);
+
+        if (!c) {
+            return reply.code(404).send({ message: 'Category not found', code: 404 });  
+        }
+        reply.send({
+            category: c, 
+            message: 'Category retrieved successfully',
+            code: 200
+        });
     } catch (err) {
         reply.code(500).send({ error: err.message });
     }

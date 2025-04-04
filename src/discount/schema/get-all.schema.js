@@ -1,9 +1,9 @@
 const standardResponses = require('../../schemas/standard.response');
 
 const getAll = { 
-  description: 'Get all brand endpoint',
-  tags: ['Brand'],
-  operationId: 'getAllBrand',
+  description: 'Get all discount endpoint',
+  tags: ['Discount'],
+  operationId: 'getAllDiscount',
   querystring: {
     type: 'object',  
     properties: {
@@ -16,15 +16,18 @@ const getAll = {
     200: {
       type: 'object',
       properties: {
-        brands: { 
+        discounts: { 
           type: 'array', 
           items: {
             type: 'object',
             properties: {
               _id: { type: 'string',},
-              brand_name: { type: 'string' },
-              brand_image: { type: 'string' },
+              value: { type: 'string' },
+              isGlobal: { type: 'boolean' },
+              name: { type: 'string' },
+              expires_at: {type: 'date'},
               slug: { type: 'string' },
+
             },
           },
         },

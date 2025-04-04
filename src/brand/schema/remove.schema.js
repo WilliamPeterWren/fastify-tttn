@@ -1,13 +1,13 @@
 const standardResponses = require('../../schemas/standard.response');
 
-const getOne = { 
-  description: 'Get one brand endpoint',
+const remove = {
+  description: 'Delete brand endpoint',
   tags: ['Brand'],
-  operationId: 'getOneBrand',
+  operationId: 'removeBrand',
   params: {
     type: 'object',
     properties: {
-      brandSlug: { type: 'string' }  
+      brandSlug: { type: 'string', minLength: 1 }
     },
     required: ['brandSlug']
   },
@@ -24,18 +24,11 @@ const getOne = {
           }
         },
         message: { type: 'string' },
-        code: { type: 'integer' }
-      }
-    },
-    404: {
-      type: 'object',
-      properties: {
-        message: { type: 'string' },
-        code: { type: 'integer' }
+        code: { type: 'integer' },
       }
     },
     ...standardResponses 
   }
 };
 
-module.exports = getOne;
+module.exports = remove;

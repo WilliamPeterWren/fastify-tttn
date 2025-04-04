@@ -13,7 +13,7 @@ const create = {
     required: ['category_name']
   },
   response: {
-    200: {
+    201: {
       type: 'object',
       properties: {
         category: {
@@ -23,6 +23,8 @@ const create = {
             parent: { type: 'string' },
           },
         },
+        message: { type: 'string' },
+        code: { type: 'number' },
       },
     },
     ...standardResponses

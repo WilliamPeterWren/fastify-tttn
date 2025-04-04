@@ -1,48 +1,61 @@
 const Brand = require('../models/Brand');
+const { createSlug } = require('../utils/user.utils');
 
-exports.getAllBrands = async (fastify) => {
-  try {
-    const brands = await Brand.find().select('-__v -products -created_at');
-    return brands; 
-  } catch (error) {
-    throw fastify.httpErrors.badRequest('Could not fetch brands');
-  }
+exports.getAllBrands = async (page, limit) => {
+    const brands = await Brand.find()
+        .select('-__v -products -created_at')
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean();
+
+    return brands;
 };
 
-exports.getByBrandId = async (id, fastify) => {
-  try {
-    console.log("id: " + id);
-    const brand = await Brand.findById(id);
-    console.log(brand);
+exports.getByBrandSlug = async (slug) => {
+    const brand = await Brand.findOne({ slug })
+        .select('-__v -created_at')
+        .lean();
+
+    if (!brand) {
+        throw new Error('Brand not found');
+    }
+
     return brand;
-  } catch (error) {
-    throw fastify.httpErrors.badRequest('brand id not found');
-  }
-
 };
 
-exports.create = async (data, fastify) => {
-  try {
-    const newItem = new Brand(data);
+exports.create = async (data) => {
+    const brand = await Brand.findOne({ brand_name: data.brand_name });
+    if (brand) {
+        throw new Error('Brand with this name already exists');
+    }
+
+    const newItem = new Brand({ ...data, slug: createSlug(data.brand_name) });
     return await newItem.save();
-  } catch (error) {
-    throw fastify.httpErrors.badRequest('Could not create');
-  }
 };
 
-exports.update = async (id, data, fastify) => {
-    try {
-      const brand = await Brand.findByIdAndUpdate(id, data, { new: true }).select("-__v -created_at -products");
-      return brand;
-    } catch (error) {
-      throw fastify.httpErrors.badRequest('Could not update');
+exports.update = async (slug, data) => {
+    const existingBrand = await Brand.findOne({ slug });
+    if (!existingBrand) {
+        throw new Error('Brand not found'); // Fixed logic: check for non-existence
     }
+
+    const updatedBrand = await Brand.findOneAndUpdate(
+        { slug },
+        { ...data, slug: createSlug(data.brand_name) },
+        { new: true, runValidators: true }
+    ).select('-__v -created_at -products');
+
+    if (!updatedBrand) {
+        throw new Error('Failed to update brand');
+    }
+
+    return updatedBrand;
 };
 
-exports.remove = async (id) => {
-    try {
-        return await Brand.findByIdAndDelete(id);
-    } catch (error) {
-        throw fastify.httpErrors.badRequest('Could not delete');
+exports.remove = async (slug) => {
+    const deletedBrand = await Brand.findOneAndDelete({ slug });
+    if (!deletedBrand) {
+        throw new Error('Brand not found');
     }
+    return deletedBrand;
 };

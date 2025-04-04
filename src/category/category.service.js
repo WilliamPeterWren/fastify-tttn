@@ -1,12 +1,18 @@
 const Category = require('../models/Category');
 
-exports.createCategory = async (category_name) => {
-    const existingCategory = await Category.findOne({ category_name })
-    if (existingCategory) {
-        throw new Error('Category already exists');
-    }
+const {createSlug} = require('../utils/user.utils'); 
 
-    const category = new Category({ category_name });
+exports.createCategory = async (category_name, parent) => {
+    const existingCategory = await Category.findOne({ category_name });
+    if (existingCategory) {
+        throw new Error('Category already exists'); 
+    }   
+
+    const category = new Category({ 
+        category_name,
+        parent,
+        slug: createSlug(category_name) 
+    });
     return await category.save();
 };
 
@@ -17,51 +23,68 @@ exports.getAllCategories = async (page = 1, limit = 10) => {
         .limit(limit)
         .lean();
 
-    const totalCategories = await Category.countDocuments();
-
     const formattedCategories = categories.map(category => ({
         _id: category._id,
         category_name: category.category_name,
         parent: category.parent ? category.parent.category_name : null 
     }));
 
-    console.log(formattedCategories);
-
-    return { categories: formattedCategories, total: totalCategories, page, limit };
+    return formattedCategories;
 };
 
-
-exports.updateCategory = async (id, category_name, parent) => {
-    const existingCategory = await Category.findOne({ category_name });
-    if (existingCategory && existingCategory._id.toString() !== id) {
-        throw new Error('Category name already in use');
+exports.updateCategory = async (slug, category_name, parent) => {
+    if (!slug || typeof slug !== 'string') {
+        throw new Error('Invalid category slug');
     }
 
-    return await Category.findByIdAndUpdate(id, { category_name, parent }, { new: true });
-};
-
-exports.deleteCategory = async (id) => {
-    const category = await Category.findById(id);
+    const category = await Category.findOne({ slug });
     if (!category) {
         throw new Error('Category not found');
     }
-    return await Category.findByIdAndDelete(id);
+
+    const updatedCategory = await Category.findOneAndUpdate(
+        { slug },
+        { 
+            category_name: category_name || category.category_name, 
+            parent: parent !== undefined ? parent : category.parent, 
+            slug: category_name ? createSlug(category_name) : slug 
+        }, 
+        { new: true, runValidators: true }
+    ).select('-__v -created_at -products');
+
+    if (!updatedCategory) {
+        throw new Error('Failed to update category');
+    }
+
+    return updatedCategory;
 };
 
-exports.getCategoryById = async (id) => {
-    const category = await Category.findById(id)
+exports.deleteCategory = async (slug) => {
+    if (!slug || typeof slug !== 'string') {
+        throw new Error('Invalid category slug');
+    }
+
+    const deletedCategory = await Category.findOneAndDelete({ slug });
+    if (!deletedCategory) {
+        throw new Error('Category not found');
+    }
+
+    return deletedCategory;
+};
+
+exports.getCategoryBySlug = async (slug) => {
+
+    const category = await Category.findOne({slug})
         .populate({ path: 'parent', select: 'category_name' })
         .lean();
 
+    console.log(category)
+
     if (!category) {
         throw new Error('Category not found');
     }
 
-    return {
-        _id: category._id,
-        category_name: category.category_name,
-        parent: category.parent ? category.parent.category_name : null
-    };
+    return category;
 };
 
 

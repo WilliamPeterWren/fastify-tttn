@@ -11,26 +11,24 @@ async function productRoutes(fastify, options) {
     schema: schema.create
   }, productController.create(fastify));
 
-  // fastify.get('/products', { 
-  //   schema: schema.getAll
-  // }, productController.getAllProducts);
+  fastify.get('/get-all', { 
+    schema: schema.getAll
+  }, productController.getAllProducts);
 
-  // fastify.get('/products/:id',{
-  //   schema: schema.getOne
-  // }, productController.getProductById);
+  fastify.get('/:slug',{
+    schema: schema.getOne
+  }, productController.getProductBySlug(fastify));
 
-  // fastify.put('/products/:id', { 
-  //   preHandler: [fastify.authenticate, staffMiddleware.isStaff],  
-  //   schema: schema.update
-  // }, productController.updateProduct);
+  fastify.put('/update/:slug', { 
+    preHandler: [fastify.authenticate, staffMiddleware.isStaff],  
+    schema: schema.update
+  }, productController.updateProduct(fastify));
 
-  // fastify.delete('/products/:id', { 
-  //   preHandler: [fastify.authenticate, adminMiddleware.isAdmin] 
-  // }, productController.deleteProduct);
+  fastify.delete('/delete/:slug', { 
+    preHandler: [fastify.authenticate, adminMiddleware.isAdmin],
+    schema: schema.remove
+  }, productController.deleteProduct(fastify));
 
-  // fastify.get('/products/:id/price-history',{
-  //   preHandler: [fastify.authenticate, staffMiddleware.isStaff],  
-  // }, productController.getProductPriceHistory);
 }
 
 module.exports = productRoutes;

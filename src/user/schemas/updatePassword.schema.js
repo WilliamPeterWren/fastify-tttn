@@ -24,7 +24,7 @@ const updatePassword = {
             email: { type: 'string' },
             roles: { type: 'array', items: { type: 'string' } },
             is_verified: { type: 'boolean' },
-            created_at: { type: 'string', format: 'date-time' },
+            // created_at: { type: 'string', format: 'date-time' },
           },
         },
       },

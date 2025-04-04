@@ -2,62 +2,109 @@ const brandService = require('./brand.service');
 
 exports.getAllBrands = (fastify) => async (req, res) => {
     try {
-        const brands = await brandService.getAllBrands(fastify);
-        const total = brands.length;  
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
+
+        const brands = await brandService.getAllBrands(page, limit);
+        const total = brands.length;
 
         const response = {
             brands,
             total,
             page,
-            limit
+            limit,
+            message: 'Brands retrieved successfully',
+            code: 200
         };
 
-        // console.log(response); 
-
-        res.send(response);
+        res.code(200).send(response);
     } catch (error) {
-        res.code(500).send({ message: error.message });
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
-exports.getByBrandId = (fastify) => async (req, res) => {
+exports.getByBrandSlug = (fastify) => async (request, reply) => {
     try {
-        const brand = await brandService.getByBrandId(req.params.brandId, fastify);
-        if (!brand) return res.code(404).send({ message: 'Brand not found' });
-        res.send(brand);
+        const { brandSlug } = request.params;
+        if (!brandSlug || typeof brandSlug !== 'string') {
+            throw fastify.httpErrors.badRequest('Invalid brand slug');
+        }
+
+        const brand = await brandService.getByBrandSlug(brandSlug);
+
+        reply.code(200).send({
+            brand,
+            message: 'Brand retrieved successfully',
+            code: 200
+        });
     } catch (error) {
-        res.code(500).send({ message: error.message });
+        if (error.message === 'Brand not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        }
+        fastify.log.error('Error fetching brand by slug:', error);
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
 exports.create = (fastify) => async (req, res) => {
     try {
-        const newItem = await brandService.create(req.body, fastify);
-        res.code(201).send(newItem);
+        const { brand_name } = req.body;
+        if (!brand_name) {
+            throw fastify.httpErrors.badRequest('Brand name is required');
+        }
+
+        const brand = await brandService.create(req.body);
+        res.code(201).send({
+            brand,
+            message: 'Brand created successfully', 
+            code: 201
+        });
     } catch (error) {
-        res.code(400).send({ message: error.message });
+        if (error.message === 'Brand with this name already exists') {
+            throw fastify.httpErrors.conflict(error.message);
+        }
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
 exports.update = (fastify) => async (req, res) => {
     try {
-        const brand = await brandService.update(req.params.brandId, req.body, fastify);
-        if (!brand) return res.code(404).send({ message: 'Brand not found' });
-        console.log(brand);
-        res.send(brand);
+        const { brandSlug } = req.params;
+        if (!brandSlug || typeof brandSlug !== 'string') {
+            throw fastify.httpErrors.badRequest('Invalid brand slug');
+        }
+
+        const brand = await brandService.update(brandSlug, req.body);
+        res.code(200).send({
+            brand,
+            message: 'Brand updated successfully',
+            code: 200
+        });
     } catch (error) {
-        res.code(400).send({ message: error.message });
+        if (error.message === 'Brand not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        }
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
 exports.remove = (fastify) => async (req, res) => {
     try {
-        const deletedItem = await brandService.remove(req.params.id, fastify);
-        if (!deletedItem) return res.code(404).send({ message: 'Brand not found' });
-        res.send({ message: 'Brand deleted' });
+        const { brandSlug } = req.params;
+        if (!brandSlug || typeof brandSlug !== 'string') {
+            throw fastify.httpErrors.badRequest('Invalid brand slug');
+        }
+
+        const brand = await brandService.remove(brandSlug);
+        res.code(200).send({
+            brand,
+            message: 'Brand deleted successfully', 
+            code: 200
+        });
     } catch (error) {
-        res.code(500).send({ message: error.message });
+        if (error.message === 'Brand not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        }
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };

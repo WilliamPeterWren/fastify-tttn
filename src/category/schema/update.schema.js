@@ -4,6 +4,13 @@ const update = {
   description: 'Update category endpoint',
   tags: ['Category'],
   operationId: 'updateCategory',
+  params: {  
+    type: 'object',
+    properties: {
+      slug: { type: 'string' },
+    },
+    required: ['slug'],
+  },
   body: { 
     type: 'object', 
     properties: { 
@@ -16,9 +23,16 @@ const update = {
     200: {
       type: 'object',
       properties: {
-        _id: { type: 'string' },  
-        category_name: { type: 'string' },
-        parent: { type: 'string' }
+        category: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },  
+            category_name: { type: 'string' },
+            parent: { type: 'string' }
+          }
+        },
+        message: {type: 'string'},
+        code: {type: 'number'},       
       },
     },
     ...standardResponses

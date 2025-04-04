@@ -36,6 +36,7 @@
     "nodemailer": "^6.10.0",
     "socket.io": "^4.8.1",
     "ua-parser-js": "^2.0.3",
+    "unidecode": "^1.1.0",
     "uuid": "^11.1.0"
   }
 }

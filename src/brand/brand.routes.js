@@ -9,18 +9,19 @@ async function brandRoutes(fastify, options){
     schema: schema.create
   }, brandController.create(fastify));
 
-  fastify.put('/update/:brandId', {
+  fastify.put('/update/:brandSlug', {
     preHandler: [fastify.authenticate, staffMiddleware.isStaff],  
     schema: schema.update
   }, brandController.update(fastify));
 
-  fastify.delete('/delete/:id', {
+  fastify.delete('/delete/:brandSlug', {
     preHandler: [fastify.authenticate, adminMiddleware.isAdmin],  
+    schema: schema.remove
   }, brandController.remove(fastify));
 
-  fastify.get('/:brandId', {
+  fastify.get('/:brandSlug', {
     schema: schema.getOne
-  }, brandController.getByBrandId(fastify));
+  }, brandController.getByBrandSlug(fastify));
 
   fastify.get('/get-all', {
     schema: schema.getAll

@@ -1,32 +1,38 @@
 const standardResponses = require('../../schemas/standard.response');
 
 const update = {
-  description: 'Update brand endpoint',
-  tags: ['Brand'],
-  operationId: 'updateBrand',
+  description: 'Update discount endpoint',
+  tags: ['Discount'],
+  operationId: 'updateDiscount',
   params: {
     type: 'object',
     properties: {
-      brandSlug: { type: 'string' }
+      slug: { type: 'string' }
     },
-    required: ['brandSlug']
+    required: ['slug']
   },
   body: { 
     type: 'object', 
     properties: { 
-      brand_name: { type: 'string' }, 
-      brand_image: { type: 'string' }
+      value: { type: 'string', mininum: 0 }, 
+      isGlobal: { type: 'boolean' }, 
+      name: { type: 'string' },
+      expires_at: { type: 'date' },
     }
   },
   response: {
     200: {
       type: 'object',
       properties: {
-        brand: {
+        discount: {
           type: 'object',
           properties: {
-            brand_name: { type: 'string' },
-            brand_image: { type: 'string' }
+            _id: { type: 'string',},
+            value: { type: 'string' },
+            isGlobal: { type: 'boolean' },
+            name: { type: 'string' },
+            expires_at: {type: 'date'},
+            slug: { type: 'string' },
           }
         },
         message: { type: 'string' },

@@ -13,7 +13,7 @@ const create = {
     required: ['brand_name', 'brand_image']
   },
   response: {
-    200: {
+    201: {
       type: 'object',
       properties: {
         brand: {
@@ -23,10 +23,12 @@ const create = {
             brand_image: { type: 'string' },
           },
         },
+        message: { type: 'string' },
+        code: { type: 'number' },
       },
     },
     ...standardResponses
   }
-}
+};
 
 module.exports = create;

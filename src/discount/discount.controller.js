@@ -1,49 +1,110 @@
-const DiscountService = require('./services/DiscountService');
+const discountService = require('./discount.service');
 
-exports.getAll = async (req, res) => {
+exports.getAllDiscounts = (fastify) => async (req, res) => {
     try {
-        const items = await DiscountService.getAll();
-        res.json(items);
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const discounts = await discountService.getAllDiscounts(page, limit);
+        const total = discounts.length;
+
+        const response = {
+            discounts,
+            total,
+            page,
+            limit,
+            message: 'Discounts retrieved successfully',
+            code: 200
+        };
+
+        res.code(200).send(response);
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
-exports.getOne = async (req, res) => {
+exports.getByDiscountSlug = (fastify) => async (request, reply) => {
     try {
-        const item = await DiscountService.getOne(req.params.id);
-        if (!item) return res.status(404).json({ message: 'Discount not found' });
-        res.json(item);
+        const { slug } = request.params;
+        if (!slug || typeof slug !== 'string') {
+            throw fastify.httpErrors.badRequest('Invalid discount slug');
+        }
+
+        const discount = await discountService.getByDiscountSlug(slug);
+
+        reply.code(200).send({
+            discount,
+            message: 'Discount retrieved successfully',
+            code: 200
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        if (error.message === 'Discount not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        }
+        fastify.log.error('Error fetching discount by slug:', error);
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
-exports.create = async (req, res) => {
+exports.create = (fastify) => async (req, res) => {
     try {
-        const newItem = await DiscountService.create(req.body);
-        res.status(201).json(newItem);
+        const { name } = req.body;
+        if (!name) {
+            throw fastify.httpErrors.badRequest('Discount name is required');
+        }
+
+        const discount = await discountService.create(req.body);
+        res.code(201).send({
+            discount,
+            message: 'Discount created successfully', 
+            code: 201
+        });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        if (error.message === 'Discount with this name already exists') {
+            throw fastify.httpErrors.conflict(error.message);
+        }
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
-exports.update = async (req, res) => {
+exports.update = (fastify) => async (req, res) => {
     try {
-        const updatedItem = await DiscountService.update(req.params.id, req.body);
-        if (!updatedItem) return res.status(404).json({ message: 'Discount not found' });
-        res.json(updatedItem);
+        const { slug } = req.params;
+        if (!slug || typeof slug !== 'string') {
+            throw fastify.httpErrors.badRequest('Invalid discount slug');
+        }
+
+        const discount = await discountService.update(slug, req.body);
+        res.code(200).send({
+            discount,
+            message: 'Discount updated successfully',
+            code: 200
+        });
     } catch (error) {
-        res.status(400).json({ message: error.message });
+        if (error.message === 'Discount not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        }
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };
 
-exports.remove = async (req, res) => {
+exports.remove = (fastify) => async (req, res) => {
     try {
-        const deletedItem = await DiscountService.remove(req.params.id);
-        if (!deletedItem) return res.status(404).json({ message: 'Discount not found' });
-        res.json({ message: 'Discount deleted' });
+        const { slug } = req.params;
+        if (!slug || typeof slug !== 'string') {
+            throw fastify.httpErrors.badRequest('Invalid discount slug');
+        }
+
+        const discount = await discountService.remove(slug);
+        res.code(200).send({
+            discount,
+            message: 'Discount deleted successfully', 
+            code: 200
+        });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        if (error.message === 'Discount not found') {
+            throw fastify.httpErrors.notFound(error.message);
+        }
+        throw fastify.httpErrors.internalServerError(error.message || 'Internal server error');
     }
 };

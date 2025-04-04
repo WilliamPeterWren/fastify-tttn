@@ -1,36 +1,34 @@
-const { getByBrandSlug } = require('../../brand/brand.controller');
 const standardResponses = require('../../schemas/standard.response');
 
-const getOne = { 
-  description: 'Get one category endpoint',
+const remove = {
+  description: 'Delete category endpoint',
   tags: ['Category'],
-  operationId: 'getOneCategory',
-  params: {  
+  operationId: 'removeCategory',
+  params: {
     type: 'object',
     properties: {
-      slug: { type: 'string' },
+      slug: { type: 'string', minLength: 1 }
     },
-    required: ['slug'],
+    required: ['slug']
   },
   response: {
     200: {
       type: 'object',
       properties: {
-        category:{
+        category: { 
           type: 'object',
           properties: {
             _id: { type: 'string' },
             category_name: { type: 'string' },
-            parent: { type: 'string', nullable: true },
+            parent: { type: 'string', nullable: true }
           }
         },
         message: { type: 'string' },
         code: { type: 'integer' },
-      },     
+      }
     },
-    ...standardResponses,
+    ...standardResponses 
   }
-}
+};
 
-module.exports = getOne;
-
+module.exports = remove;

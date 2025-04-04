@@ -1,0 +1,47 @@
+user: 
+    register user jwt
+    login jwt
+    update password
+    verify email
+    profile
+    forget password - send otp/new password to email
+    limit login - if wrong identifier
+
+address:
+    CRUD
+    GET by userId
+
+google:
+    log in with google oauth2 -- url: http://localhost:3000/login/google
+
+token:
+    logout jwt
+    token/refresh token
+
+admin:
+    update staff role - require: Admin role
+    register staff
+    get staff by roles
+
+staff:
+    get all user<active/deactive> - require: staff role
+    deactive/active user/staff - require: staff role
+    get User by id - require: staff role
+
+auth:
+    send/verify OTP via email
+    login history - send email if logged in a strange device
+
+chat:
+    chat system - Beta version <features: user is typing>
+
+---------------------------------
+admin manage staff
+staff manage user
+
+1 user has maximum 3 addresses
+
+------------------------------------
+cập nhật lại: 
+    staff được quyền tạo, cập nhật
+    chỉ có admin được quyền xóa
